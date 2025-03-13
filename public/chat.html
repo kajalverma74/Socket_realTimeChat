@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realtime Chat App</title>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <style>
+        #chat-box {
+            border: 1px solid black;
+            width: 300px;
+            height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        #messageInput {
+            width: 200px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Realtime Chat</h2>
+    
+    <div id="chat-box"></div>
+
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        const socket = io("http://localhost:5000");
+
+        // Get username from localStorage or ask for it
+        let username = localStorage.getItem("username");
+        if (!username) {
+            username = prompt("Enter your name:");
+            localStorage.setItem("username", username);
+        }
+
+        socket.emit("new user", username); // Notify server about new user
+
+        function sendMessage() {
+            const message = document.getElementById("messageInput").value.trim();
+            
+            if (message !== "") {
+                socket.emit("chat message", { user: username, message });
+                document.getElementById("messageInput").value = ""; // Clear input
+            }
+        }
+
+        socket.on("chat message", (data) => {
+            const chatBox = document.getElementById("chat-box");
+            const msgElement = document.createElement("p");
+            msgElement.innerHTML = `<strong>${data.user}:</strong> ${data.message}`;
+            chatBox.appendChild(msgElement);
+            chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to latest message
+        });
+
+        socket.on("user list", (users) => {
+            console.log("Active Users:", users);
+        });
+    </script>
+</body>
+</html>

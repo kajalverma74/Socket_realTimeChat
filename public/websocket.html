@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat</title>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+</head>
+<body>
+    <h2>Chat App</h2>
+    <input id="username" placeholder="Enter your name" />
+    <button onclick="joinChat()">Join</button>
+    <p id="typingIndicator"></p>
+    <ul id="messages"></ul>
+    
+    <input id="messageInput" placeholder="Type a message..." oninput="startTyping()" onblur="stopTyping()" />
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        const socket = io();
+        let username = "";
+
+        function joinChat() {
+            username = document.getElementById("username").value;
+            if (username.trim()) {
+                socket.emit("new user", username);
+                document.getElementById("username").disabled = true;
+            }
+        }
+
+        function sendMessage() {
+            let message = document.getElementById("messageInput").value;
+            if (message.trim()) {
+                socket.emit("chat message", message);
+                document.getElementById("messageInput").value = "";
+            }
+        }
+
+        function startTyping() {
+            socket.emit("typing");
+        }
+
+        function stopTyping() {
+            socket.emit("stop typing");
+        }
+
+        socket.on("chat message", function(data) {
+            let li = document.createElement("li");
+            li.textContent = `${data.user}: ${data.message}`;
+            document.getElementById("messages").appendChild(li);
+        });
+
+        socket.on("typing", function(msg) {
+            document.getElementById("typingIndicator").textContent = msg;
+        });
+
+        socket.on("user list", function(users) {
+            console.log("Connected Users:", users);
+        });
+    </script>
+</body>
+</html>
