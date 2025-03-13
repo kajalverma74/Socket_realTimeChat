@@ -15,4 +15,3 @@ A **real-time chat application** built with **Node.js, Express, Socket.IO**, and
 - **Frontend:** HTML, CSS, JavaScript  
 - **Database:** MongoDB  
 
-## **📂 Project Structure**
