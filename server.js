@@ -2,7 +2,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
-const path = require("path");  
+const path = require("path");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/userRoutes");
 require("dotenv").config();
@@ -21,29 +21,33 @@ connectDB();
 // 📌 Auth Routes
 app.use("/api/auth", authRoutes);
 
-let users = {}; // 🔹 Track connected users
+let users = {}; // 🔹 Store connected users
 
 // 📌 WebSocket Connection
 io.on("connection", (socket) => {
     console.log(`✅ A user connected: ${socket.id}`);
 
+    // 🔹 Handle New User Joining
     socket.on("new user", (username) => {
-        if (!username) username = `Guest_${socket.id.substring(0, 5)}`; // Default name
+        if (!username) username = `Guest_${socket.id.substring(0, 5)}`;
         users[socket.id] = username;
         console.log(`🔹 ${username} joined the chat`);
         io.emit("user list", Object.values(users));
     });
 
+    // 🔹 Handle Chat Messages
     socket.on("chat message", (data) => {
-        const user = users[socket.id] || "Guest";
+        const user = users[socket.id] || `Guest_${socket.id.substring(0, 5)}`;
         const message = data.message?.trim();
+        const time = new Date().toLocaleTimeString(); 
 
         if (message) {
-            console.log(`💬 ${user}: ${message}`);
-            io.emit("chat message", { user, message });
+            console.log(`💬 ${user}: ${message} (${time})`);
+            io.emit("chat message", { user, message, time }); 
         }
     });
 
+    // 🔹 Handle User Disconnection
     socket.on("disconnect", () => {
         console.log(`❌ ${users[socket.id] || "Guest"} disconnected`);
         delete users[socket.id];
